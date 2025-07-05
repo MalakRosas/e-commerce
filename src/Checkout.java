@@ -24,7 +24,6 @@ public class Checkout {
     for (CartItem item : cart.getItems()) {
       Product product = item.getProduct();
 
-      // Check if expired (if applicable)
       if (product instanceof Expirable) {
         Expirable exp = (Expirable) product;
         if (exp.isExpired()) {
@@ -32,7 +31,6 @@ public class Checkout {
         }
       }
 
-      // Collect shippable items
       if (product instanceof Shippable) {
         for (int i = 0; i < item.getQuantity(); i++) {
           shippables.add((Shippable) product);
@@ -42,29 +40,23 @@ public class Checkout {
       subtotal += item.subtotal();
     }
 
-    // Calculate shipping weight
     double totalWeight = 0.0;
     for (Shippable s : shippables) {
       totalWeight += s.getWeight();
     }
-
     double shippingFee = totalWeight * shippingRatePerKg;
     double totalAmount = subtotal + shippingFee;
 
-    // Check balance
     if (customer.getBalance() < totalAmount) {
       throw new IllegalStateException("Customer does not have enough balance to complete the order.");
     }
 
-    // Ship items
     if (!shippables.isEmpty()) {
       shippingService.ship(shippables);
     }
 
-    // Charge customer
     customer.debit(totalAmount);
 
-    // Print receipt
     System.out.println("** Checkout receipt **");
     for (CartItem item : cart.getItems()) {
       System.out.printf("%dx %s %.2f\n", item.getQuantity(), item.getProduct().getName(), item.subtotal());
